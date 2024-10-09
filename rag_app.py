@@ -1,6 +1,12 @@
 from openai import AzureOpenAI
 import streamlit as st
 from os import environ
+from langchain_community.document_loaders import TextLoader, PyPDFLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+st.title("Assignment 1: RAG Application")
+st.caption("Designed by Shania Cabrera")
+uploaded_file = st.file_uploader("Please upload a file", type=("txt", "pdf"))
 
 client = AzureOpenAI(
     api_key=environ['AZURE_OPENAI_API_KEY'],
@@ -9,12 +15,16 @@ client = AzureOpenAI(
     azure_deployment=environ['AZURE_OPENAI_MODEL_DEPLOYMENT'],
 )
 
-st.title("Assignment 1: RAG Application")
-uploaded_file = st.file_uploader("Please upload a file", type=("txt", "pdf"))
-
 question = st.chat_input(
     "Ask about this file! :) ",
     disabled=not uploaded_file,
+)
+
+chunk_size = 100
+chunk_overlap = 0
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size = chunk_size,
+    chunk_overlap = chunk_overlap
 )
 
 if "messages" not in st.session_state:
@@ -43,23 +53,15 @@ if question and uploaded_file:
         response = st.write_stream(stream)
 
     st.session_state.messages.append({"role": "assistant", "content": response})
+    
 
-
-from langchain_community.document_loaders import TextLoader
 loader = TextLoader(uploaded_file)
 documents = loader.load()
-# documents[0].metadata
+chunks = text_splitter.split_documents(loader)
 
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-chunk_size = 100
-chunk_overlap = 0
+for chunk in chunks:
+    print(chunk.page_content)
+    print("-----")
 
-text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size = chunk_size,
-    chunk_overlap = chunk_overlap
-)
-
-# chunks = text_splitter.split_documents(documents)
-# for chunk in chunks:
-#     print(chunk.page_content)
-#     print("-----")
+# loader = PyPDFLoader(file_content)
+# documents = loader.load()
