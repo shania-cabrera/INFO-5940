@@ -6,7 +6,6 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 st.title("Assignment 1: RAG Application")
 st.caption("Designed by Shania Cabrera")
-uploaded_file = st.file_uploader("Please upload a file", type=("txt", "pdf"))
 
 client = AzureOpenAI(
     api_key=environ['AZURE_OPENAI_API_KEY'],
@@ -15,10 +14,7 @@ client = AzureOpenAI(
     azure_deployment=environ['AZURE_OPENAI_MODEL_DEPLOYMENT'],
 )
 
-question = st.chat_input(
-    "Ask about this file! :) ",
-    disabled=not uploaded_file,
-)
+uploaded_files = st.file_uploader("Please upload file(s)", type=("txt", "pdf"), accept_multiple_files=True)
 
 chunk_size = 100
 chunk_overlap = 0
@@ -26,6 +22,13 @@ text_splitter = RecursiveCharacterTextSplitter(
     chunk_size = chunk_size,
     chunk_overlap = chunk_overlap
 )
+
+
+question = st.chat_input(
+    "Ask about this file! :) ",
+    disabled=not uploaded_file,
+)
+
 
 if "messages" not in st.session_state:
     st.session_state["messages"] = [{"role": "assistant", "content": "Please ask about the file's content."}]
